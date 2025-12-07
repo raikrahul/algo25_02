@@ -9,7 +9,7 @@ value: | 0 | 0 | 0 | 0 | 0 | 3 | 2 | 8 |11 |10 |15 |22 |
 answer = 5
 ```
 
-BRUTE FORCE — scan left to right, count 0s until you hit non-zero — for the above array you check index 0 (is 0? yes, count=1), check index 1 (is 0? yes, count=2), check index 2 (is 0? yes, count=3), check index 3 (is 0? yes, count=4), check index 4 (is 0? yes, count=5), check index 5 (is 3? not zero, STOP) — you visited 6 cells — answer is 5.
+BRUTE FORCE — scan left to right, count 0s until you hit non-zero — for the above array you check index 0 (is 0? yes, count=1), check index 1 (is 0? yes, count=2), check index 2 (is 0? yes, count=3), check index 3 (is 0? yes, count=4), check index 4 (is 0? yes, count=5), check index 5 (is 3? not zero, STOP) — you visited 6 cells — answer is 5.   
 
 EXAMPLE 2:
 ```
