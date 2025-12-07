@@ -1,0 +1,8 @@
+title: Algorithms 2025
+description: Algorithm implementations with detailed writeups and error analysis
+theme: jekyll-theme-cayman
+
+# This tells Jekyll to include .md and .rs files
+include:
+  - "*.md"
+  - "*.rs"
