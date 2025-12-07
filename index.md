@@ -12,6 +12,12 @@ Algorithm implementations with detailed writeups and error analysis.
 
 Binary search boundary detection with hybrid strategy
 
+### 02. Count Leading Zeroes
+- [📝 Writeup](02_count_leading_zeroes.md)
+- [🦀 Code](02_count_leading_zeroes.rs)
+
+Binary search to find first non-zero element — explains WHY low=mid+1 but high=mid
+
 ---
 
 **More algorithms coming soon...**
