@@ -291,6 +291,11 @@ fn is_cyclic_perm(s1: &str, s2: &str) -> bool {
     // If both are empty, length check passed (0 == 0).
     // Empty is cyclic perm of empty.
     if s1.is_empty() {
+        // SAFETY: We do NOT need to check s2.is_empty().
+        // Why? Because Step 1 already verified s1.len() == s2.len().
+        // If s1 is empty (len 0), then s2 MUST be empty (len 0).
+        // If s2 was not empty, Step 1 would have returned false (0 != N).
+        // Therefore, we know s2 is empty here.
         return true;
     }
 
