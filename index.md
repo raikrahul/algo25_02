@@ -38,6 +38,24 @@ Floyd's Cycle Detection / Negation Marking debugged with deep logic traces
 
 Merging sorted arrays in-place with pattern matching logic and deep numerical examples
 
+### 06. Cyclic Permutation
+- [📝 Writeup](05_cyclic_permutation.md)
+- [🦀 Code](05_cyclic_permutation.rs)
+
+Check if one string is a rotation of another using the concatenation trick
+
+### 07. Remove Length
+- [📝 Writeup](remove_length.md)
+- [🦀 Code](remove_length.rs)
+
+In-place array element removal with length tracking
+
+### 08. Reverse Words in Sentence
+- [📝 Writeup](06_reverse_words_in_sentence.md)
+- [🦀 Code](reverse_words.rs)
+
+In-place word reversal using the two-reversal trick with gap-skipping logic
+
 ---
 
 **More algorithms coming soon...**
