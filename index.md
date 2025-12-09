@@ -43,3 +43,13 @@ Contents:
     Doc: 08_reverse_words_in_sentence.md
     Code: 08_reverse_words.rs
     Two-reversal word swap technique.
+
+09. Anagram Check
+    Doc: anagram_check.md
+    Code: anagram_check.rs
+    Character frequency comparison via array.
+
+10. Distinct Anagram Groups
+    Doc: distinct_anagram_groups.md
+    Code: distinct_anagram_groups.rs
+    Sorted key grouping with inflection point counting.
