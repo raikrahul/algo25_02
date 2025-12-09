@@ -1,125 +1,79 @@
-# The Mechanics of Exclusion: A Deep Dive into Binary Search Boundary Detection
+01 Array Zero Prefix Counting
 
-**The Essence of Divide and Conquer**
+PROBLEM
+Count contiguous zeroes at the start of an array.
+Input:  [0, 0, 0, 3, 2, 8]
+Output: 3
 
-We are solving the "Count Zeroes" problem: given an array starting with contiguous zeroes followed by arbitrary non-zero integers, write an efficient function to return the count. The input `000003[...]`
+FIGURE 1: Data Transformation
+Convert values to boolean for binary search.
 
-## 1. The Data Transformation
-
-To apply Divide and Conquer, we must first strip the values of their numerical meaning and view them as a truth table.
-
-```
-RAW INPUT (The Noise):
 Index:   0    1    2    3    4    5
-Val:   [ 0  | 0  | 0  | 3  | 2  | 8  ]
-                        ^
-                        |
-            "Arbitrary" (Distraction)
+Value: [ 0  | 0  | 0  | 3  | 2  | 8  ]
+Bool:  [ T  | T  | T  | F  | F  | F  ]
+                       ^
+                       First FALSE = answer index
 
-BOOLEAN VIEW (The Signal):
-Index:   0    1    2    3    4    5
-Logic: [ T  | T  | T  | F  | F  | F  ]
-         ^              ^
-         |              |
-     Contiguous     Transition
-       (YES)           (NO)
-```
+FIGURE 2: Infinite Loop Trap
+Observe what happens with bad pointer update.
 
-## 2. The Trap of Pure Division
+Input: [0, 0]
+Target: 2
 
-A common misconception is that Binary Search is merely `Mid = (Left + Right) / 2`. This fails because integer division truncates. If your update logic is `Low = Mid`, you create "Zeno's Paradox" where the pointers never converge.
+Iteration 1:
+  L=0, R=1, Mid=(0+1)/2=0
+  Arr[0]=0, set L=Mid (WRONG: L stays 0)
 
-```
-SCENARIO: [ 0 , 0 ]
-Target: Count 2.
+Iteration 2:
+  L=0, R=1, Mid=0
+  Same state. Infinite loop.
 
-ITERATION 1:
-Index:   0    1
-Val:   [ 0  | 0  ]
-         ^    ^
-         L    R
-Mid Calc: (0+1)/2 = 0.
-Check Arr[0]: Is 0.
-Bad Action: Low = Mid (0).
+Fix: Use L=Mid+1 when Arr[Mid]=0.
 
-ITERATION 2 (The Freeze):
-Index:   0    1
-Val:   [ 0  | 0  ]
-         ^    ^
-         L    R
-Mid Calc: (0+1)/2 = 0.
-Check Arr[0]: Is 0.
-Bad Action: Low = Mid (0).
-STATUS: STUCK FOREVER.
-```
+FIGURE 3: Hybrid Strategy Trace
+Input: [0, 0, 0, 50]
+Target: 3
 
-## 3. The "Coward's Condition" & The Hybrid Strategy
+Phase 1 (Binary Search):
+  L=0, R=3. |R-L|=3>1. Continue.
+  Mid=1. Arr[1]=0. L=Mid+1=2.
+  L=2, R=3. |R-L|=1. Stop.
+  Result: L=2 (guaranteed count so far).
 
-Many developers fear the "Off-By-One" errors that occur when binary search pointers cross (`Left > Right`). To avoid this, we often implement a "Lazy Loop" using a condition like `abs(Left - Right) > 1`.
+Phase 2 (Linear Scan):
+  Scan [2,3].
+  i=2: Arr[2]=0. Count=1.
+  i=3: Arr[3]=50. Stop.
 
-```
-SCENARIO: [ 0, 0, 0, 50 ] (Target: 3)
+Total = L + Count = 2 + 1 = 3. Correct.
 
-PHASE 1: THE LAZY LOOP (Divide)
-Init: L=0, R=3. Diff=3 (>1). Run.
-Mid: 1. Val: 0. Action: Left = 2.
+IMPLEMENTATION
 
-State: L=2, R=3.
-Math: abs(2-3) = 1. 
-Check: 1 > 1? [FALSE]. LOOP QUITS.
-Result: Phase 1 hands over 'Left=2' (Guaranteed Count).
+fn count_zeroes(arr: &[i32]) -> i32 {
+    let n = arr.len() as i32;
+    if n == 0 { return 0; }
 
-PHASE 2: THE JANITOR (Conquer/Scan)
-Range: [2, 3].
-Iter 1 (i=2): Val is 0. Janitor_Count becomes 1.
-Iter 2 (i=3): Val is 50. Break.
+    let (mut l, mut r) = (0, n - 1);
 
-FINAL CALCULATION:
-Total = Left (2) + Janitor (1) = 3.
-STATUS: CORRECT.
-```
-
-## 4. The Implementation (Mixed Strategy)
-
-This implementation satisfies the "Divide and Conquer" philosophy by using Binary Search to handle the bulk of the data and a Linear Scan helper to handle the boundary precision. It is robust against infinite loops and out-of-bounds crashes.
-
-```rust
-fn count_zeroes_mixed_strategy(array: &[i32]) -> i32 {
-    let n = array.len() as i32;
-    if n == 0 { return 0; } // Edge Case
-
-    let mut left = 0;
-    let mut right = n - 1;
-
-    // PHASE 1: DIVIDE (The Lazy Loop)
-    // Reduce search space to <= 2 elements.
-    // Safe from infinite loops and out-of-bounds crashes.
-    while (right - left).abs() > 1 {
-        let mid = left + (right - left) / 2;
-        if array[mid as usize] == 0 {
-            left = mid + 1; // Accumulate count
+    // Binary search: reduce to <=2 elements
+    while (r - l).abs() > 1 {
+        let mid = l + (r - l) / 2;
+        if arr[mid as usize] == 0 {
+            l = mid + 1;
         } else {
-            right = mid - 1; // Shrink boundary
+            r = mid - 1;
         }
     }
 
-    // PHASE 2: CONQUER (The Janitor)
-    // Linearly scan the residue [left, right]
-    let mut janitor_count = 0;
-    let mut i = left;
-    while i <= right && i < n { 
-        if array[i as usize] == 0 {
-            janitor_count += 1;
+    // Linear scan: count remaining zeroes
+    let mut count = 0;
+    for i in l..=r {
+        if arr[i as usize] == 0 {
+            count += 1;
         } else {
-            break; 
+            break;
         }
-        i += 1;
     }
 
-    return left + janitor_count; 
+    l + count
 }
-```
-
-## References
-
-- [Notebook on this topic](https://notebooklm.google.com/notebook/8fb7cae0-eee3-45b7-8b53-ce4259d928be)
