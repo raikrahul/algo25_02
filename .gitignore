@@ -10,6 +10,10 @@ reverse_words
 *.exe
 target/
 
+# Agent and rules files
+.agent/
+rules/
+
 # OS generated files
 .DS_Store
 Thumbs.db
