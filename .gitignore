@@ -1,0 +1,15 @@
+# Compiled binaries
+05_cyclic_permutation
+06_merge_arrays
+07_remove_length
+08_reverse_words
+merge_arrays_test
+reverse_words
+
+# Generic Rust binaries (compiled without extension)
+*.exe
+target/
+
+# OS generated files
+.DS_Store
+Thumbs.db

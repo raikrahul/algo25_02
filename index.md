@@ -32,27 +32,27 @@ Efficient polynomial calculation with numerical trace and memory layout analysis
 
 Floyd's Cycle Detection / Negation Marking debugged with deep logic traces
 
-### 05. Merge Arrays
-- [📝 Writeup](merge_arrays.md)
-- [🦀 Code](merge_arrays.rs)
-
-Merging sorted arrays in-place with pattern matching logic and deep numerical examples
-
-### 06. Cyclic Permutation
+### 05. Cyclic Permutation
 - [📝 Writeup](05_cyclic_permutation.md)
 - [🦀 Code](05_cyclic_permutation.rs)
 
 Check if one string is a rotation of another using the concatenation trick
 
+### 06. Merge Arrays
+- [📝 Writeup](06_merge_arrays.md)
+- [🦀 Code](06_merge_arrays.rs)
+
+Merging sorted arrays in-place with pattern matching logic and deep numerical examples
+
 ### 07. Remove Length
-- [📝 Writeup](remove_length.md)
-- [🦀 Code](remove_length.rs)
+- [📝 Writeup](07_remove_length.md)
+- [🦀 Code](07_remove_length.rs)
 
 In-place array element removal with length tracking
 
 ### 08. Reverse Words in Sentence
-- [📝 Writeup](06_reverse_words_in_sentence.md)
-- [🦀 Code](reverse_words.rs)
+- [📝 Writeup](08_reverse_words_in_sentence.md)
+- [🦀 Code](08_reverse_words.rs)
 
 In-place word reversal using the two-reversal trick with gap-skipping logic
 
