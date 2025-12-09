@@ -53,3 +53,8 @@ Contents:
     Doc: distinct_anagram_groups.md
     Code: distinct_anagram_groups.rs
     Sorted key grouping with inflection point counting.
+
+11. Anchor Puzzle
+    Doc: 11_anchor_puzzle.md
+    Code: 11_anchor_puzzle.rs
+    Binary search for index where A[i] = i using g(i) = A[i] - i monotonicity.
