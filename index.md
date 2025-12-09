@@ -58,3 +58,8 @@ Contents:
     Doc: 11_anchor_puzzle.md
     Code: 11_anchor_puzzle.rs
     Binary search for index where A[i] = i using g(i) = A[i] - i monotonicity.
+
+12. Phone Pad Combinations
+    Doc: 12_phone_pad_combinations.md
+    Code: 12_phone_pad_combinations.rs
+    Recursive backtracking with push/pop buffer to generate all letter combinations.
