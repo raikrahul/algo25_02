@@ -45,13 +45,13 @@ Contents:
     Two-reversal word swap technique.
 
 09. Anagram Check
-    Doc: anagram_check.md
-    Code: anagram_check.rs
+    Doc: 09_anagram_check.md
+    Code: 09_anagram_check.rs
     Character frequency comparison via array.
 
 10. Distinct Anagram Groups
-    Doc: distinct_anagram_groups.md
-    Code: distinct_anagram_groups.rs
+    Doc: 10_distinct_anagram_groups.md
+    Code: 10_distinct_anagram_groups.rs
     Sorted key grouping with inflection point counting.
 
 11. Anchor Puzzle
