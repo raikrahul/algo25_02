@@ -1,5 +1,7 @@
 # Phone Pad Combinations: Building Blocks from Scratch
 
+
+https://notebooklm.google.com/notebook/0bacdeb1-e976-4988-a2e6-f2c19e8d9c1d
 ---
 
 ## BLOCK 1: Raw Physical Input
