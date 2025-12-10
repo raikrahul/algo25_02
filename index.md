@@ -18,3 +18,4 @@ Algorithm implementations with error analysis and numerical traces.
 | 10 | Distinct Anagram Groups | [10_distinct_anagram_groups.md](10_distinct_anagram_groups.md) | [10_distinct_anagram_groups.rs](10_distinct_anagram_groups.rs) | Sorted key grouping with inflection point counting |
 | 11 | Anchor Puzzle | [11_anchor_puzzle.md](11_anchor_puzzle.md) | [11_anchor_puzzle.rs](11_anchor_puzzle.rs) | Binary search for A[i] = i using g(i) = A[i] - i |
 | 12 | Phone Pad Combinations | [12_phone_pad_combinations.md](12_phone_pad_combinations.md) | [12_phone_pad_combinations.rs](12_phone_pad_combinations.rs) | Recursive backtracking with push/pop buffer |
+| 13 | Simple Number Multiplication | [13_simple_number_multiplication.md](13_simple_number_multiplication.md) | [13_simple_number_multiplication.rs](13_simple_number_multiplication.rs) | O(n) repunit² coefficient + carry propagation |
