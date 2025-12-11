@@ -1,0 +1,70 @@
+[package]
+name = "algo25_02"
+version = "0.1.0"
+edition = "2021"
+
+# This allows each .rs file to be compiled as a separate binary or test
+# Run with: cargo test --bin <filename_without_extension>
+# Example: cargo test --bin 15_bi_repetitive_matrices
+
+[[bin]]
+name = "01_array_zero_prefix_counting"
+path = "01_array_zero_prefix_counting.rs"
+
+[[bin]]
+name = "02_count_leading_zeroes"
+path = "02_count_leading_zeroes.rs"
+
+[[bin]]
+name = "03_polynomial_evaluation"
+path = "03_polynomial_evaluation.rs"
+
+[[bin]]
+name = "04_find_any_duplicate"
+path = "04_find_any_duplicate.rs"
+
+[[bin]]
+name = "05_cyclic_permutation"
+path = "05_cyclic_permutation.rs"
+
+[[bin]]
+name = "06_merge_arrays"
+path = "06_merge_arrays.rs"
+
+[[bin]]
+name = "07_remove_length"
+path = "07_remove_length.rs"
+
+[[bin]]
+name = "08_reverse_words"
+path = "08_reverse_words.rs"
+
+[[bin]]
+name = "09_anagram_check"
+path = "09_anagram_check.rs"
+
+[[bin]]
+name = "10_distinct_anagram_groups"
+path = "10_distinct_anagram_groups.rs"
+
+[[bin]]
+name = "11_anchor_puzzle"
+path = "11_anchor_puzzle.rs"
+
+[[bin]]
+name = "12_phone_pad_combinations"
+path = "12_phone_pad_combinations.rs"
+
+[[bin]]
+name = "13_simple_number_multiplication"
+path = "13_simple_number_multiplication.rs"
+
+[[bin]]
+name = "14_all_combinations_string_letters"
+path = "14_all_combinations_string_letters.rs"
+
+[[bin]]
+name = "15_bi_repetitive_matrices"
+path = "15_bi_repetitive_matrices.rs"
+
+[dependencies]
