@@ -87,4 +87,16 @@ path = "19_linked_list_sort.rs"
 name = "20_tree_similarity"
 path = "20_tree_similarity.rs"
 
+[[bin]]
+name = "21_bottom_up_level"
+path = "21_bottom_up_level.rs"
+
+[[bin]]
+name = "22_zig_zag_traversal"
+path = "22_zig_zag_traversal.rs"
+
+[[bin]]
+name = "23_max_level_sum"
+path = "23_max_level_sum.rs"
+
 [dependencies]

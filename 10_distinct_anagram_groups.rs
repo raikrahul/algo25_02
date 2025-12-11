@@ -66,27 +66,22 @@ use std::fs;
 ///   RETURN 1
 ///
 pub fn count_distinct_anagram_groups(file_path: &str) -> usize {
-
-    let contents = match fs::read_to_string(file_path)
-    {
+    let contents = match fs::read_to_string(file_path) {
         Err(_) => {
             panic!("error in file reading");
         }
-        Ok(c) =>
-        {
-            c
-        }
+        Ok(c) => c,
     };
-    let lines:Vec<&str>  = contents.lines().filter(|line| !line.trim().is_empty())
-    .collect();
-    let mut keys : Vec<String> = lines.iter().
-                map(|line| canonical_key(line))
-                .collect();
+    let lines: Vec<&str> = contents
+        .lines()
+        .filter(|line| !line.trim().is_empty())
+        .collect();
+    let mut keys: Vec<String> = lines.iter().map(|line| canonical_key(line)).collect();
 
     keys.sort();
 
-    let mut count = 0 ;
-    
+    let mut count = 0;
+
     if keys.is_empty() {
         return 0;
     }
@@ -121,12 +116,11 @@ pub fn count_distinct_anagram_groups(file_path: &str) -> usize {
 /// NOTE: "listen" and "SILENT" produce same key "eilnst" → same group
 ///
 pub fn canonical_key(word: &str) -> String {
-    let lower:String = word.to_lowercase();
-    let mut chars:Vec<char> = lower.chars().collect();
+    let lower: String = word.to_lowercase();
+    let mut chars: Vec<char> = lower.chars().collect();
     chars.sort();
-    let sorted:String = chars.into_iter().collect();
+    let sorted: String = chars.into_iter().collect();
     sorted
-
 }
 
 // ============================================================================
@@ -139,12 +133,17 @@ mod tests {
     use std::io::Write;
 
     fn create_temp_file(words: &[&str]) -> String {
-        let path = "/tmp/test_dictionary.txt";
-        let mut file = fs::File::create(path).unwrap();
+        use std::time::{SystemTime, UNIX_EPOCH};
+        let nanos = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let path = format!("/tmp/test_dictionary_{}.txt", nanos);
+        let mut file = fs::File::create(&path).unwrap();
         for word in words {
             writeln!(file, "{}", word).unwrap();
         }
-        path.to_string()
+        path
     }
 
     #[test]
@@ -224,11 +223,11 @@ mod tests {
         let path = "/tmp/test_with_empty.txt";
         let mut file = fs::File::create(path).unwrap();
         writeln!(file, "cat").unwrap();
-        writeln!(file, "").unwrap();  // empty line
+        writeln!(file, "").unwrap(); // empty line
         writeln!(file, "act").unwrap();
-        writeln!(file, "   ").unwrap();  // whitespace only
+        writeln!(file, "   ").unwrap(); // whitespace only
         writeln!(file, "tac").unwrap();
-        
+
         // cat, act, tac → 1 group
         assert_eq!(count_distinct_anagram_groups(path), 1);
     }
@@ -243,11 +242,7 @@ mod tests {
         // cat → group 5
         // Total: 5 groups
         let path = create_temp_file(&[
-            "eat", "tea", "ate",
-            "tan", "nat",
-            "bat", "tab",
-            "god", "dog",
-            "cat"
+            "eat", "tea", "ate", "tan", "nat", "bat", "tab", "god", "dog", "cat",
         ]);
         assert_eq!(count_distinct_anagram_groups(&path), 5);
     }

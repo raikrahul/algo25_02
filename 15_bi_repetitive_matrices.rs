@@ -168,27 +168,64 @@ impl BiRepMatrix {
         if size == 0 || (size & (size - 1)) != 0 {
             return Err(format!("Size {} is not a power of 2", size));
         }
-        
+
         // Check data dimensions
         if data.len() != size {
-            return Err(format!("Row count {} doesn't match size {}", data.len(), size));
+            return Err(format!(
+                "Row count {} doesn't match size {}",
+                data.len(),
+                size
+            ));
         }
-        
+
         for (i, row) in data.iter().enumerate() {
             if row.len() != size {
-                return Err(format!("Row {} has length {} but expected {}", i, row.len(), size));
+                return Err(format!(
+                    "Row {} has length {} but expected {}",
+                    i,
+                    row.len(),
+                    size
+                ));
             }
         }
-        
-        // TODO: Add Bi-Rep structure validation
-        
+
+        // Check Bi-Rep structure validation
+        if !Self::is_bi_repetitive(&data) {
+            return Err("Data does not have Bi-Repetitive structure".to_string());
+        }
+
         Ok(BiRepMatrix { size, data })
     }
 
     /// Helper function to check if a 2D array slice is Bi-Repetitive
     fn is_bi_repetitive(data: &[Vec<i32>]) -> bool {
-        // TODO: Implement recursive Bi-Rep checking
-        unimplemented!("You need to implement is_bi_repetitive helper")
+        let n = data.len();
+        if n == 0 || n == 1 {
+            return true; // 0x0 or 1x1 is trivially Bi-Rep
+        }
+
+        let half = n / 2;
+
+        // Check all rows: left half must equal right half
+        for i in 0..n {
+            for j in 0..half {
+                if data[i][j] != data[i][j + half] {
+                    return false;
+                }
+            }
+        }
+
+        // Recursively check top-left block (B) and bottom-left block (C)
+        let b_block: Vec<Vec<i32>> = data[0..half]
+            .iter()
+            .map(|row| row[0..half].to_vec())
+            .collect();
+        let c_block: Vec<Vec<i32>> = data[half..n]
+            .iter()
+            .map(|row| row[0..half].to_vec())
+            .collect();
+
+        Self::is_bi_repetitive(&b_block) && Self::is_bi_repetitive(&c_block)
     }
 
     /// **Task: Add two Bi-Repetitive matrices**
@@ -342,40 +379,40 @@ impl BiRepMatrix {
 
         // Recursive case: n > 1
         let half = self.size / 2;
-        
+
         // Extract blocks from both matrices
-        let b1_data = self.extract_block(true, true);   // top of self
-        let c1_data = self.extract_block(false, true);  // bottom of self
-        let b2_data = other.extract_block(true, true);  // top of other
+        let b1_data = self.extract_block(true, true); // top of self
+        let c1_data = self.extract_block(false, true); // bottom of self
+        let b2_data = other.extract_block(true, true); // top of other
         let c2_data = other.extract_block(false, true); // bottom of other
-        
+
         // Create BiRepMatrix from extracted blocks
         let b1 = BiRepMatrix::new(half, b1_data)?;
         let c1 = BiRepMatrix::new(half, c1_data)?;
         let b2 = BiRepMatrix::new(half, b2_data)?;
         let c2 = BiRepMatrix::new(half, c2_data)?;
-        
+
         // Recursive addition
         let b_result = b1.add(&b2)?;
         let c_result = c1.add(&c2)?;
-        
+
         // Construct result: [[B, B], [C, C]]
         let mut result_data = vec![vec![0; self.size]; self.size];
-        
+
         // Copy b_result to top half (both left and right)
         for i in 0..half {
             for j in 0..self.size {
                 result_data[i][j] = b_result.data[i][j % half];
             }
         }
-        
+
         // Copy c_result to bottom half (both left and right)
         for i in 0..half {
             for j in 0..self.size {
                 result_data[half + i][j] = c_result.data[i][j % half];
             }
         }
-        
+
         Ok(BiRepMatrix::new(self.size, result_data)?)
     }
 
@@ -621,13 +658,13 @@ impl BiRepMatrix {
         if self.size != other.size {
             return Err("Sizes do not match".to_string());
         }
-        
+
         // Base case: n=1
         if self.size == 1 {
             let result_val = self.data[0][0] * other.data[0][0];
             return Ok(BiRepMatrix::new(1, vec![vec![result_val]])?);
         }
-        
+
         // Optimized case for n=2: [a,a] × [e,e] = [a(e+f), a(e+f)]
         //                         [b,b]   [f,f]   [b(e+f), b(e+f)]
         if self.size == 2 {
@@ -635,58 +672,58 @@ impl BiRepMatrix {
             let b = self.data[1][0];
             let e = other.data[0][0];
             let f = other.data[1][0];
-            
+
             let sum = e + f;
             let top = a * sum;
             let bot = b * sum;
-            
+
             return Ok(BiRepMatrix::new(2, vec![vec![top, top], vec![bot, bot]])?);
         }
-        
+
         // Recursive case: n > 2
         // M1 × M2 = [[B1,B1], × [[B2,B2], = [[B1×B2+B1×C2, B1×B2+B1×C2],
         //            [C1,C1]]    [C2,C2]]    [C1×B2+C1×C2, C1×B2+C1×C2]]
-        
+
         let half = self.size / 2;
-        
+
         // Extract blocks
         let b1_data = self.extract_block(true, true);
         let c1_data = self.extract_block(false, true);
         let b2_data = other.extract_block(true, true);
         let c2_data = other.extract_block(false, true);
-        
+
         let b1 = BiRepMatrix::new(half, b1_data)?;
         let c1 = BiRepMatrix::new(half, c1_data)?;
         let b2 = BiRepMatrix::new(half, b2_data)?;
         let c2 = BiRepMatrix::new(half, c2_data)?;
-        
+
         // Compute 4 products
-        let p1 = b1.multiply(&b2)?;  // B1 × B2
-        let p2 = b1.multiply(&c2)?;  // B1 × C2
-        let p3 = c1.multiply(&b2)?;  // C1 × B2
-        let p4 = c1.multiply(&c2)?;  // C1 × C2
-        
+        let p1 = b1.multiply(&b2)?; // B1 × B2
+        let p2 = b1.multiply(&c2)?; // B1 × C2
+        let p3 = c1.multiply(&b2)?; // C1 × B2
+        let p4 = c1.multiply(&c2)?; // C1 × C2
+
         // Compute sums for top and bottom halves
-        let b_result = p1.add(&p2)?;  // B1×B2 + B1×C2
-        let c_result = p3.add(&p4)?;  // C1×B2 + C1×C2
-        
+        let b_result = p1.add(&p2)?; // B1×B2 + B1×C2
+        let c_result = p3.add(&p4)?; // C1×B2 + C1×C2
+
         // Construct result: [[B_result, B_result], [C_result, C_result]]
         let mut result_data = vec![vec![0; self.size]; self.size];
-        
+
         // Copy b_result to top half (both left and right)
         for i in 0..half {
             for j in 0..self.size {
                 result_data[i][j] = b_result.data[i][j % half];
             }
         }
-        
+
         // Copy c_result to bottom half (both left and right)
         for i in 0..half {
             for j in 0..self.size {
                 result_data[half + i][j] = c_result.data[i][j % half];
             }
         }
-        
+
         Ok(BiRepMatrix::new(self.size, result_data)?)
     }
 
