@@ -71,4 +71,8 @@ path = "15_bi_repetitive_matrices.rs"
 name = "16_halve_list"
 path = "16_halve_list.rs"
 
+[[bin]]
+name = "17_clone_linked_list"
+path = "17_clone_linked_list.rs"
+
 [dependencies]
