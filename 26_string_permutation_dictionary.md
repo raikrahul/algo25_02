@@ -62,8 +62,77 @@ Heap: chars@0x100=['a','b','c'] shared, results@0x200=["abc"]
 Space: O(n) stack + O(n!×n) results
 
 ---
+FULL CALL TRACE (each line = step, call number, params, action):
+
+INPUT: chars=['a','b','c'], dict={"abc","bca","cab"}, results=[]
+
+STEP01, CALL₁, backtrack(chars=['a','b','c'], start=0, dict, results=[]), L68: 0==3? → ✗, L75: for i in 0..3, i=0: L76: swap(0,0)→['a','b','c'], L77: call backtrack(start=1)
+STEP02, CALL₂, backtrack(chars=['a','b','c'], start=1, dict, results=[]), L68: 1==3? → ✗, L75: for i in 1..3, i=1: L76: swap(1,1)→['a','b','c'], L77: call backtrack(start=2)
+STEP03, CALL₃, backtrack(chars=['a','b','c'], start=2, dict, results=[]), L68: 2==3? → ✗, L75: for i in 2..3, i=2: L76: swap(2,2)→['a','b','c'], L77: call backtrack(start=3)
+STEP04, CALL₄, backtrack(chars=['a','b','c'], start=3, dict, results=[]), L68: 3==3? → ✓, L69: s="abc", L70: "abc"∈dict? → ✓, L71: results.push("abc"), results=["abc"], L72: return
+STEP05, CALL₃ resumed, L78: swap(2,2)→['a','b','c'], loop ends (i=2 was last), return
+STEP06, CALL₂ resumed, L78: swap(1,1)→['a','b','c'], i=2: L76: swap(1,2)→['a','c','b'], L77: call backtrack(start=2)
+STEP07, CALL₅, backtrack(chars=['a','c','b'], start=2, dict, results=["abc"]), L68: 2==3? → ✗, L75: i=2: swap(2,2), L77: call backtrack(start=3)
+STEP08, CALL₆, backtrack(chars=['a','c','b'], start=3, dict, results=["abc"]), L68: 3==3? → ✓, L69: s="acb", L70: "acb"∈dict? → ✗, skip L71, L72: return
+STEP09, CALL₅ resumed, L78: swap(2,2), loop ends, return
+STEP10, CALL₂ resumed, L78: swap(1,2)→['a','b','c'], loop ends (i=2 was last), return
+STEP11, CALL₁ resumed, L78: swap(0,0)→['a','b','c'], i=1: L76: swap(0,1)→['b','a','c'], L77: call backtrack(start=1)
+STEP12, CALL₇, backtrack(chars=['b','a','c'], start=1, dict, results=["abc"]), L68: 1==3? → ✗, L75: i=1: swap(1,1)→['b','a','c'], L77: call backtrack(start=2)
+STEP13, CALL₈, backtrack(chars=['b','a','c'], start=2, dict, results=["abc"]), L68: 2==3? → ✗, L75: i=2: swap(2,2), L77: call backtrack(start=3)
+STEP14, CALL₉, backtrack(chars=['b','a','c'], start=3, dict, results=["abc"]), L68: 3==3? → ✓, L69: s="bac", L70: "bac"∈dict? → ✗, skip L71, L72: return
+STEP15, CALL₈ resumed, L78: swap(2,2), return
+STEP16, CALL₇ resumed, L78: swap(1,1), i=2: L76: swap(1,2)→['b','c','a'], L77: call backtrack(start=2)
+STEP17, CALL₁₀, backtrack(chars=['b','c','a'], start=2, dict, results=["abc"]), L68: 2==3? → ✗, L75: i=2: swap(2,2), L77: call backtrack(start=3)
+STEP18, CALL₁₁, backtrack(chars=['b','c','a'], start=3, dict, results=["abc"]), L68: 3==3? → ✓, L69: s="bca", L70: "bca"∈dict? → ✓, L71: push("bca"), results=["abc","bca"], L72: return
+STEP19, CALL₁₀ resumed, L78: swap(2,2), return
+STEP20, CALL₇ resumed, L78: swap(1,2)→['b','a','c'], return
+STEP21, CALL₁ resumed, L78: swap(0,1)→['a','b','c'], i=2: L76: swap(0,2)→['c','b','a'], L77: call backtrack(start=1)
+STEP22, CALL₁₂, backtrack(chars=['c','b','a'], start=1, dict, results=["abc","bca"]), L68: 1==3? → ✗, L75: i=1: swap(1,1), L77: call backtrack(start=2)
+STEP23, CALL₁₃, backtrack(chars=['c','b','a'], start=2, dict, results=["abc","bca"]), L68: 2==3? → ✗, L75: i=2: swap(2,2), L77: call backtrack(start=3)
+STEP24, CALL₁₄, backtrack(chars=['c','b','a'], start=3, dict, results=["abc","bca"]), L68: 3==3? → ✓, L69: s="cba", L70: "cba"∈dict? → ✗, return
+STEP25, CALL₁₃ resumed, return
+STEP26, CALL₁₂ resumed, L78: swap(1,1), i=2: swap(1,2)→['c','a','b'], L77: call backtrack(start=2)
+STEP27, CALL₁₅, backtrack(chars=['c','a','b'], start=2, dict, results=["abc","bca"]), L68: 2==3? → ✗, i=2: swap(2,2), L77: call backtrack(start=3)
+STEP28, CALL₁₆, backtrack(chars=['c','a','b'], start=3, dict, results=["abc","bca"]), L68: 3==3? → ✓, L69: s="cab", L70: "cab"∈dict? → ✓, L71: push("cab"), results=["abc","bca","cab"], return
+STEP29, CALL₁₅ resumed, return
+STEP30, CALL₁₂ resumed, L78: swap(1,2)→['c','b','a'], return
+STEP31, CALL₁ resumed, L78: swap(0,2)→['a','b','c'], loop ends (i=2 was last), return
+
+OUTPUT: results=["abc","bca","cab"], 16 calls total, 6 base cases, 3 matches
+
+---
 ERRORS MADE:
-E1: wrote dict instead of dictionary → wrong identifier
-E2: wrote &mut Vec<char> = collect() → reference vs owned confusion
-E3: forgot return statement → missing implicit return
-FIX: read function signature first, trace types, write return value first
+
+E1. L63: dict.contains(&s) → dictionary.contains(&s)
+    wrote: dict
+    param: dictionary
+    sloppy: autopilot from comment
+    missed: fn signature 3 lines above
+    prevent: read signature before body
+
+E2. L88: let chars: &mut Vec<char> = collect()
+    wrote: &mut Vec<char> (reference)
+    collect(): Vec<char> (owned)
+    sloppy: confused reference vs owned
+    missed: collect() creates new value
+    prevent: trace type: iter→collect→Vec
+
+E3. L88-91: no return statement
+    wrote: backtrack(...);
+    needed: backtrack(...); results
+    sloppy: forgot implicit return
+    missed: fn → Vec<String>
+    prevent: write return first
+
+BRAIN QUESTIONS:
+Q1: dict vs dictionary → copied from comment, not from signature
+Q2: &mut Vec vs Vec → assumed reference because fn takes &mut
+Q3: no return → wrote top-to-bottom, forgot output
+PATTERN: all 3 = not reading current context, using cached patterns
+
+ORTHOGONAL:
+E1 = lexical (wrong name)
+E2 = type (reference vs owned)
+E3 = structural (missing expression)
+3 categories, 3 compiler stages, 0 logic errors
+
