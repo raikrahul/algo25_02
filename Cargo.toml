@@ -99,4 +99,8 @@ path = "22_zig_zag_traversal.rs"
 name = "23_max_level_sum"
 path = "23_max_level_sum.rs"
 
+[[bin]]
+name = "24_lca"
+path = "24_lca.rs"
+
 [dependencies]
