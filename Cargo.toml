@@ -79,4 +79,12 @@ path = "17_clone_linked_list.rs"
 name = "18_loop_detection_removal"
 path = "18_loop_detection_removal.rs"
 
+[[bin]]
+name = "19_linked_list_sort"
+path = "19_linked_list_sort.rs"
+
+[[bin]]
+name = "20_tree_similarity"
+path = "20_tree_similarity.rs"
+
 [dependencies]
