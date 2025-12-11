@@ -68,6 +68,10 @@ name = "15_bi_repetitive_matrices"
 path = "15_bi_repetitive_matrices.rs"
 
 [[bin]]
+name = "25_floor_ceil_bst"
+path = "25_floor_ceil_bst.rs"
+
+[[bin]]
 name = "16_halve_list"
 path = "16_halve_list.rs"
 
@@ -102,5 +106,9 @@ path = "23_max_level_sum.rs"
 [[bin]]
 name = "24_lca"
 path = "24_lca.rs"
+
+[[bin]]
+name = "26_string_permutation_dictionary"
+path = "26_string_permutation_dictionary.rs"
 
 [dependencies]
