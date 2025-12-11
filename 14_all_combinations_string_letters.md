@@ -1,286 +1,381 @@
-# Problem 14: All Combinations of String Letters
+# All Combinations of String Letters
 
-Given a string S, write a function that displays all the combinations of the characters from the string. Assume that input string will not contain any repetition of characters.
-Example: Input String: “ABC”, Output combinations: “A”, “B”, “C”, “AB”, “AC”, “BC” and “ABC”.
-
-       [ ]
-      /   \
-    NO     YES(A)
-    /       \
-  [ ]       [A]
-  / \       / \
- NO YES(B) NO YES(B)
- |    |     |    |
-[ ]  [B]   [A]  [AB]
-/\    /\    /\    /\
-N Y(C)N Y  N Y  N Y
-| |   | |  | |  | |
-[][C] [B][BC][A][AC][AB][ABC]
-
-You will gloss over the tree above. You will look at the final row and nod, "yes, standard power set," without calculating the cost of the edges. You will fail to write the base case correctly, likely printing the empty set `[]` which is not in the example output "A", "B"... etc. You will miss the off-by-one error calculation where $2^3 = 8$ but output count is $7$. You will struggle with the mutable `String` buffer passing: you will push 'A', recurse, then forget to pop 'A', leading to "AB" becoming "AB..." instead of backtracking to "A" then "AC". You will unlikely calculate the actual stack frame size, assuming it's free. You will assume `s[i]` is a single byte without considering the UTF-8 implications if the string was "A🂡C", though the problem implies ASCII. You will fail to manually trace the execution path for "AC" specifically, which requires: Root -> Yes(A) -> No(B) -> Yes(C). You will rush the indices.
-
-What: $2^3 - 1 = 7$ outputs. Total characters printed: $1 \times 3 + 2 \times 3 + 3 \times 1 = 12$. String length $N=3$.
-Why: $\sum_{k=1}^{3} \binom{3}{k} = 7$. $111_2 \rightarrow 7_{10}$.
-Where: Stack depth $N+1 = 4$. Heap allocations for `current` buffer: 1 (reused) or $2^N$ (if immutable).
-Who: 1 main thread.
-When: $2^N$ complexity. $N=3 \rightarrow 8$ steps. $N=10 \rightarrow 1024$ steps.
-Without: Iterative bitmasking (which would avoid recursion stack) or `pop()` (if using immutable strings).
-Which: $101_2$ is $AC$. $011_2$ is $BC$. Indices $0, 2$ used for $AC$.
-
-# The Trap of the Sticky Tray: Manually Tracing the Failure
-
-You are now a mechanical arm moving items into a tray.
-**Rule**: You cannot create new trays. You have ONE tray.
-Input: `['A', 'B', 'C']` (Indices 0, 1, 2).
-
-**Your Task**:
-Trace the exact contents of the tray at each step below. **Do not correct mistakes. Write down exactly what happens if you ONLY add items.**
-
-1. **Start**. Tray: `[]`.
-2. **Move to Index 0 ('A')**.
-    - Action: Add 'A'.
-    - Recurse.
-3. **Move to Index 1 ('B')**.
-    - Action: Add 'B'.
-    - Recurse.
-4. **Move to Index 2 ('C')**.
-    - Action: Add 'C'.
-    - Recurse.
-5. **Hit Limit**. Print Tray.
-    - **Output #1**: `['A', 'B', 'C']`. (Correct?)
-6. **Return** to Index 2 frame.
-    - We finished the "Include C" path.
-    - Now we do the "Exclude C" path.
-    - Recurse (Move to Index 3).
-7. **Hit Limit**. Print Tray.
-    - **Critical Question**: You did not remove 'C'. What is currently in the tray?
-    - **Output #2**: `_________________`.
-    - Is this `['A', 'B']`? Or is it `['A', 'B', 'C']`?
-
-8. **Return** to Index 1 frame.
-    - We finished "Include B".
-    - Now we do "Exclude B".
-    - Recurse.
-9. **Move to Index 2 ('C')**.
-    - Action: Add 'C'.
-    - **Critical Question**: What was in the tray *before* you added 'C' this time?
-    - **Output #3**: `_________________`.
-
-**The Paradox**:
-To get "AC", your tray needs to look like `['A', 'C']`.
-But if you never took things out, your tray at Step 9 looks like `['A', 'B', 'C', 'C']` or `['A', 'B', 'C', 'B', 'C']` depending on your exact path.
-**Calculate the garbage:** If you run this for N=3 without ever taking items out, how long is the string at the final output?
-
-- Calculated Length: ________.
-- Actual RAM usage: ________.
-
-**The Fix**:
-You need an operation to "undo" Step 2, Step 3, Step 4.
-What is that operation? Where *exactly* does it go?
-
-- Draw the timeline.
-- Insert the "Undo" command.
-- Verify if `['A', 'B', 'C']` becomes `['A', 'B']` before Step 7.
-
-# Full Execution Trace
+## Problem
 
 ```
-s = "ABC" → len = 3
-tray = [] → &mut String
-char_pos = 0 → usize
-
-Step│C#│pos│L# │tray_before→action→tray_after│pos==3?│len>0?│Output
-────┼──┼───┼───┼──────────────────────────────┼───────┼──────┼──────
-1   │1 │0  │51 │pos==3? → 0==3?✗ → skip if    │       │      │
-2   │1 │0  │57 │ch = s[0] → 'A'               │       │      │
-3   │1 │0  │61 │[]→push(A)→[A]                │       │      │
-4   │1 │0  │62 │[A]→helper(0+1)→              │       │      │
-    │  │   │   │    ↓                         │       │      │
-5   │2 │1  │51 │pos==3? → 1==3?✗ → skip if    │       │      │
-6   │2 │1  │57 │ch = s[1] → 'B'               │       │      │
-7   │2 │1  │61 │[A]→push(B)→[A,B]             │       │      │
-8   │2 │1  │62 │[A,B]→helper(1+1)→            │       │      │
-    │  │   │   │    ↓                         │       │      │
-9   │3 │2  │51 │pos==3? → 2==3?✗ → skip if    │       │      │
-10  │3 │2  │57 │ch = s[2] → 'C'               │       │      │
-11  │3 │2  │61 │[A,B]→push(C)→[A,B,C]         │       │      │
-12  │3 │2  │62 │[A,B,C]→helper(2+1)→          │       │      │
-    │  │   │   │    ↓                         │       │      │
-13  │4 │3  │51 │pos==3? → 3==3?✓ → enter if   │       │      │
-14  │4 │3  │52 │len>0? → 3>0?✓                │       │      │
-15  │4 │3  │53 │combinations.push("ABC")      │       │      │→"ABC"
-16  │4 │3  │55 │return                        │       │      │
-    │  │   │   │    ↑                         │       │      │
-17  │3 │2  │63 │[A,B,C]→pop()→[A,B]           │       │      │
-18  │3 │2  │64 │[A,B]→helper(2+1)→            │       │      │
-    │  │   │   │    ↓                         │       │      │
-19  │5 │3  │51 │pos==3? → 3==3?✓ → enter if   │       │      │
-20  │5 │3  │52 │len>0? → 2>0?✓                │       │      │
-21  │5 │3  │53 │combinations.push("AB")       │       │      │→"AB"
-22  │5 │3  │55 │return                        │       │      │
-    │  │   │   │    ↑                         │       │      │
-23  │3 │2  │65 │return                        │       │      │
-    │  │   │   │    ↑                         │       │      │
-24  │2 │1  │63 │[A,B]→pop()→[A]               │       │      │
-25  │2 │1  │64 │[A]→helper(1+1)→              │       │      │
-    │  │   │   │    ↓                         │       │      │
-26  │6 │2  │51 │pos==3? → 2==3?✗ → skip if    │       │      │
-27  │6 │2  │57 │ch = s[2] → 'C'               │       │      │
-28  │6 │2  │61 │[A]→push(C)→[A,C]             │       │      │
-29  │6 │2  │62 │[A,C]→helper(2+1)→            │       │      │
-    │  │   │   │    ↓                         │       │      │
-30  │7 │3  │51 │pos==3? → 3==3?✓              │       │      │
-31  │7 │3  │52 │len>0? → 2>0?✓                │       │      │
-32  │7 │3  │53 │combinations.push("AC")       │       │      │→"AC"
-33  │7 │3  │55 │return                        │       │      │
-    │  │   │   │    ↑                         │       │      │
-34  │6 │2  │63 │[A,C]→pop()→[A]               │       │      │
-35  │6 │2  │64 │[A]→helper(2+1)→              │       │      │
-    │  │   │   │    ↓                         │       │      │
-36  │8 │3  │51 │pos==3? → 3==3?✓              │       │      │
-37  │8 │3  │52 │len>0? → 1>0?✓                │       │      │
-38  │8 │3  │53 │combinations.push("A")        │       │      │→"A"
-39  │8 │3  │55 │return                        │       │      │
-    │  │   │   │    ↑                         │       │      │
-40  │6 │2  │65 │return                        │       │      │
-    │  │   │   │    ↑                         │       │      │
-41  │2 │1  │65 │return                        │       │      │
-    │  │   │   │    ↑                         │       │      │
-42  │1 │0  │63 │[A]→pop()→[]                  │       │      │
-43  │1 │0  │64 │[]→helper(0+1)→               │       │      │
-    │  │   │   │    ↓                         │       │      │
-44  │9 │1  │51 │pos==3? → 1==3?✗              │       │      │
-45  │9 │1  │57 │ch = s[1] → 'B'               │       │      │
-46  │9 │1  │61 │[]→push(B)→[B]                │       │      │
-47  │9 │1  │62 │[B]→helper(1+1)→              │       │      │
-    │  │   │   │    ↓                         │       │      │
-48  │10│2  │51 │pos==3? → 2==3?✗              │       │      │
-49  │10│2  │57 │ch = s[2] → 'C'               │       │      │
-50  │10│2  │61 │[B]→push(C)→[B,C]             │       │      │
-51  │10│2  │62 │[B,C]→helper(2+1)→            │       │      │
-    │  │   │   │    ↓                         │       │      │
-52  │11│3  │51 │pos==3? → 3==3?✓              │       │      │
-53  │11│3  │52 │len>0? → 2>0?✓                │       │      │
-54  │11│3  │53 │combinations.push("BC")       │       │      │→"BC"
-55  │11│3  │55 │return                        │       │      │
-    │  │   │   │    ↑                         │       │      │
-56  │10│2  │63 │[B,C]→pop()→[B]               │       │      │
-57  │10│2  │64 │[B]→helper(2+1)→              │       │      │
-    │  │   │   │    ↓                         │       │      │
-58  │12│3  │51 │pos==3? → 3==3?✓              │       │      │
-59  │12│3  │52 │len>0? → 1>0?✓                │       │      │
-60  │12│3  │53 │combinations.push("B")        │       │      │→"B"
-61  │12│3  │55 │return                        │       │      │
-    │  │   │   │    ↑                         │       │      │
-62  │10│2  │65 │return                        │       │      │
-    │  │   │   │    ↑                         │       │      │
-63  │9 │1  │63 │[B]→pop()→[]                  │       │      │
-64  │9 │1  │64 │[]→helper(1+1)→               │       │      │
-    │  │   │   │    ↓                         │       │      │
-65  │13│2  │51 │pos==3? → 2==3?✗              │       │      │
-66  │13│2  │57 │ch = s[2] → 'C'               │       │      │
-67  │13│2  │61 │[]→push(C)→[C]                │       │      │
-68  │13│2  │62 │[C]→helper(2+1)→              │       │      │
-    │  │   │   │    ↓                         │       │      │
-69  │14│3  │51 │pos==3? → 3==3?✓              │       │      │
-70  │14│3  │52 │len>0? → 1>0?✓                │       │      │
-71  │14│3  │53 │combinations.push("C")        │       │      │→"C"
-72  │14│3  │55 │return                        │       │      │
-    │  │   │   │    ↑                         │       │      │
-73  │13│2  │63 │[C]→pop()→[]                  │       │      │
-74  │13│2  │64 │[]→helper(2+1)→               │       │      │
-    │  │   │   │    ↓                         │       │      │
-75  │15│3  │51 │pos==3? → 3==3?✓              │       │      │
-76  │15│3  │52 │len>0? → 0>0?✗ → skip push    │       │      │
-77  │15│3  │55 │return                        │       │      │→skip
-    │  │   │   │    ↑                         │       │      │
-78  │13│2  │65 │return                        │       │      │
-    │  │   │   │    ↑                         │       │      │
-79  │9 │1  │65 │return                        │       │      │
-    │  │   │   │    ↑                         │       │      │
-80  │1 │0  │65 │return                        │       │      │
-
-∴ combinations = ["ABC","AB","AC","A","BC","B","C"]
-∴ |combinations| = 7 = 2³ - 1 ✓
-∴ total steps = 80
-∴ total calls = 15
+Input: "ABC"
+Output: "A", "B", "C", "AB", "AC", "BC", "ABC"
 ```
 
-# Confusion Log
+## Numerical Analysis
 
-## Error 1: BLANK #1 = 1
+### Input → State Evolution
 
-Q: What goes in `helper(input, ___, tray)`?
-Wrong: `1`
-Correct: `index + 1`
-Why wrong: Confused literal `1` with expression `index + 1`. index=0 → next=1. index=1 → next=2. Pattern: `current + 1`.
+```
+s = "ABC"
+n = 3
+chars = ['A', 'B', 'C']
+indices = [0, 1, 2]
+```
 
-## Error 2: BLANK #2 = -1
+### Expected Output Count
 
-Q: What goes in second `helper(input, ___, tray)`?
-Wrong: `-1`
-Correct: `index + 1`
-Why wrong: Assumed second call goes backward. Both calls go forward. Difference: tray state (with/without char).
+```
+n = 3
+2^n - 1 = 2^3 - 1 = 8 - 1 = 7 combinations
+∴ 7 non-empty subsets
 
-## Error 3: pop(ch)
+Breakdown:
+1-char: C(3,1) = 3
+2-char: C(3,2) = 3  
+3-char: C(3,3) = 1
+Total: 3 + 3 + 1 = 7 ✓
+```
 
-Wrong: `tray.pop(ch);`
-Correct: `tray.pop();`
-Why wrong: Assumed pop needs argument. String::pop() takes no argument, removes last char automatically.
+### State Space Exploration
 
-## Error 4: Combinations vs combinations
+```
+At index 0 ('A'):
+  ├─ Include 'A' → tray = ['A']
+  │   At index 1 ('B'):
+  │     ├─ Include 'B' → tray = ['A','B']
+  │     │   At index 2 ('C'):
+  │     │     ├─ Include 'C' → tray = ['A','B','C'] → output "ABC"
+  │     │     └─ Exclude 'C' → tray = ['A','B'] → output "AB"
+  │     └─ Exclude 'B' → tray = ['A']
+  │         At index 2 ('C'):
+  │           ├─ Include 'C' → tray = ['A','C'] → output "AC"
+  │           └─ Exclude 'C' → tray = ['A'] → output "A"
+  └─ Exclude 'A' → tray = []
+      At index 1 ('B'):
+        ├─ Include 'B' → tray = ['B']
+        │   At index 2 ('C'):
+        │     ├─ Include 'C' → tray = ['B','C'] → output "BC"
+        │     └─ Exclude 'C' → tray = ['B'] → output "B"
+        └─ Exclude 'B' → tray = []
+            At index 2 ('C'):
+              ├─ Include 'C' → tray = ['C'] → output "C"
+              └─ Exclude 'C' → tray = [] → output "" ✗ (excluded)
+```
 
-Wrong: `&mut Combinations`
-Correct: `&mut combinations`
-Why wrong: Capital C. Rust is case-sensitive.
+### Failure Pattern Prediction #1: Base Case Mishandling
 
-## Error 5: Missing comma
+```
+char_pos = 0, 1, 2, 3
+n = 3
 
-Wrong: `index : usize tray`
-Correct: `index: usize, tray`
-Why wrong: Forgot comma between parameters.
+WRONG: char_pos == n → always output tray
+  → char_pos = 3, tray = [] → outputs "" ✗
 
-## Confusion 6: char_pos meaning
+RIGHT: char_pos == n ∧ tray ≠ [] → output tray
+  → char_pos = 3, tray = [] → skip ✓
+  → char_pos = 3, tray = ['A'] → output "A" ✓
+```
 
-Q: "char_pos will be 1,2,3 or 0,1,2?"
-Answer: 0,1,2 (then 3 triggers stop).
-Confusion: Mixed 1-indexed with 0-indexed.
+### Failure Pattern Prediction #2: Missing Branch
 
-## Confusion 7: 4 calls for 3 chars
+```
+At char_pos = 0:
+  WRONG: Only recurse with include
+    helper(0) → tray.push('A') → helper(1) → ...
+    Result: {A, AB, ABC} (3 combinations) ✗
+    Missing: 2^3 - 1 - 3 = 4 combinations
 
-Q: "how can we have 4 calls when string is just abc"
-Answer: 3 chars to decide + 1 call to print = 4 calls per path.
-Confusion: Expected calls = chars. Forgot base case call.
+  RIGHT: Recurse twice (include branch + exclude branch)
+    helper(0) → 
+      ├─ tray.push('A') → helper(1) → ... → tray.pop()
+      └─ helper(1) → ...
+    Result: 7 combinations ✓
+```
 
-## Confusion 8: Returning and explore
+### Failure Pattern Prediction #3: Pop Timing
 
-Q: "you defined paths" / "what is explore rest"
-Answer: Undefined terms introduced. Should use only "spawn" and "return".
-Confusion: Vocabulary not grounded in prior definitions.
+```
+SCENARIO: char_pos = 1, tray = ['A']
 
-## Confusion 9: tray=[A] when char_pos=3
+WRONG Order:
+  tray.push('B')     → tray = ['A', 'B']
+  helper(2)          → explores all paths with "AB" prefix
+  // Missing pop!
+  helper(2)          → explores with tray STILL = ['A', 'B'] ✗
 
-Q: "how can you push just A when char_pos is 3"
-Answer: char_pos tracks position decided. tray tracks chars included. Independent.
-Confusion: Assumed char_pos = tray.len().
+Resulting tray states:
+  First helper(2) completes → tray = ['A', 'B', 'C'] after deep recursion
+  Second helper(2) starts → tray = ['A', 'B', 'C'] (corrupted) ✗
 
-## Confusion 10: is_empty check frequency
+RIGHT Order:
+  tray.push('B')     → tray = ['A', 'B']
+  helper(2)          → explores all paths with "AB" prefix  
+  tray.pop()         → tray = ['A'] (restored)
+  helper(2)          → explores with tray = ['A'] ✓
 
-Q: "this check is used just once in the entire calls?"
-Answer: Check runs 8 times. Fails 1 time (Call 15).
-Confusion: Thought check = special case. Check runs at every leaf.
+∴ push → recurse → pop = mandatory sandwich
+```
 
-## Summary Table
+### Failure Pattern Prediction #4: Index Progression
 
-| # | Error Type | Wrong | Correct |
-|---|------------|-------|---------|
-| 1 | Expression vs Literal | `1` | `index + 1` |
-| 2 | Direction | `-1` | `+1` |
-| 3 | API | `pop(ch)` | `pop()` |
-| 4 | Case | `Combinations` | `combinations` |
-| 5 | Syntax | missing `,` | `,` required |
-| 6 | Indexing | 1-indexed | 0-indexed |
-| 7 | Count | 3 calls | 4 calls |
-| 8 | Vocabulary | undefined | grounded |
-| 9 | Independence | coupled | independent |
-| 10 | Frequency | once | 8 times |
+```
+WRONG: helper(char_pos) calls helper(char_pos)
+  → infinite loop
+  → stack overflow after ~10000 calls
+
+WRONG: helper(char_pos) calls helper(char_pos + 2)
+  → skips every other character
+  → n=3: processes indices [0, 2] only
+  → missing index 1 ('B')
+  → outputs: {A, AC, C} (3 combinations) ✗
+
+RIGHT: helper(char_pos) calls helper(char_pos + 1)
+  → processes indices [0, 1, 2, 3]
+  → char_pos increments: 0→1, 1→2, 2→3
+  → 3 == n → base case ✓
+```
+
+### Data Structure States (Example: "ABC")
+
+```
+Call Stack Depth vs Tray Size:
+
+Depth 0: char_pos=0, tray=[]
+Depth 1: char_pos=1, tray=['A'] or []
+Depth 2: char_pos=2, tray=['A','B'] or ['A'] or ['B'] or []
+Depth 3: char_pos=3, tray=['A','B','C'] or ['A','B'] or ['A','C'] or ['A'] or ['B','C'] or ['B'] or ['C'] or []
+
+Max depth = n + 1 = 4
+Max tray size = n = 3
+```
+
+### Failure Pattern Prediction #5: Output Timing
+
+```
+WRONG: Output after BOTH recursive calls
+
+  fn helper(pos) {
+    if pos == n {
+      if !tray.is_empty() { output(tray) }
+      return
+    }
+    
+    tray.push(s[pos])
+    helper(pos+1)
+    tray.pop()
+    
+    helper(pos+1)
+    
+    output(tray)  // ✗ Wrong position!
+  }
+
+  → Outputs partial combinations multiple times
+  → Total outputs: 2^(n+1) - 1 = 15 (not 7) ✗
+
+RIGHT: Output ONLY in base case
+  → Outputs exactly when char_pos == n
+  → Total outputs: 2^n - 1 = 7 ✓
+```
+
+### Numerical Trace (n=2, s="AB")
+
+```
+helper(0, [])
+  ├─ push('A') → [A]
+  │  helper(1, [A])
+  │    ├─ push('B') → [A,B]
+  │    │  helper(2, [A,B])  
+  │    │    → char_pos=2 == n=2 ∧ tray≠[] → OUTPUT "AB" ✓
+  │    │  pop('B') → [A]
+  │    └─ helper(2, [A])
+  │         → char_pos=2 == n=2 ∧ tray≠[] → OUTPUT "A" ✓
+  │  pop('A') → []
+  └─ helper(1, [])
+       ├─ push('B') → [B]
+       │  helper(2, [B])
+       │    → char_pos=2 == n=2 ∧ tray≠[] → OUTPUT "B" ✓
+       │  pop('B') → []
+       └─ helper(2, [])
+            → char_pos=2 == n=2 ∧ tray=[] → SKIP ✓
+
+Results: ["AB", "A", "B"] → 3 combinations
+Expected: 2^2 - 1 = 3 ✓
+```
+
+### Failure Pattern Prediction #6: String Building
+
+```
+WRONG: Building string during recursion
+  fn helper(pos, current_str: String)
+  → current_str = "AB"
+  → After helper call, current_str STILL = "AB" (String not mutated) ✗
+  → Need to manually remove last char
+
+RIGHT: Use Vec<char> as tray
+  → tray.push('A') → tray = ['A']
+  → tray.pop() → tray = []
+  → O(1) operations ✓
+
+Performance:
+  String: clone per call → O(n) per operation → O(n * 2^n) total
+  Vec<char>: push/pop → O(1) per operation → O(2^n) total
+  ∴ Vec is n times faster
+```
+
+### Calculation Challenge #1: Small Scale (n=1)
+
+```
+s = "X"
+n = 1
+
+Tree:
+helper(0, [])
+  ├─ push('X') → [X]
+  │  helper(1, [X]) → OUTPUT "X" ✓
+  │  pop() → []
+  └─ helper(1, []) → SKIP ✓
+
+Output count: 1
+Expected: 2^1 - 1 = 1 ✓
+```
+
+### Calculation Challenge #2: Mid Scale (n=4)
+
+```
+s = "ABCD"
+n = 4
+
+Expected outputs: 2^4 - 1 = 15
+
+1-char: C(4,1) = 4
+2-char: C(4,2) = 6
+3-char: C(4,3) = 4
+4-char: C(4,4) = 1
+Total: 4+6+4+1 = 15 ✓
+
+Max call depth: 4 + 1 = 5
+Total function calls: 2^5 - 1 = 31
+Calls with output: 15
+Calls skipped: 1 (empty tray at depth 5)
+Calls internal: 31 - 15 - 1 = 15
+```
+
+### Calculation Challenge #3: Edge Case (n=0)
+
+```
+s = ""
+n = 0
+
+helper(0, [])
+  → char_pos=0 == n=0 ∧ tray=[] → SKIP ✓
+  → No recursive calls
+  → No outputs
+
+Expected: 2^0 - 1 = 0 ✓
+```
+
+### Calculation Challenge #4: Performance (n=10)
+
+```
+s = "ABCDEFGHIJ"
+n = 10
+
+Output count: 2^10 - 1 = 1023
+Function calls: 2^11 - 1 = 2047
+
+For n=20:
+Output count: 2^20 - 1 = 1,048,575
+Function calls: 2^21 - 1 = 2,097,151
+
+For n=25:
+Output count: 2^25 - 1 = 33,554,431
+Function calls: 2^26 - 1 = 67,108,863
+
+∴ Exponential growth → infeasible for n > 25
+```
+
+### Calculation Challenge #5: Memory (n=3)
+
+```
+s = "ABC"
+n = 3
+
+Per call stack frame:
+  char_pos: usize = 8 bytes
+  tray: &mut Vec<char> = 8 bytes (reference)
+  Total ~16 bytes per frame
+
+Max depth = 4
+Max stack memory = 4 × 16 = 64 bytes
+
+Tray storage (shared):
+  Max size = 3 chars
+  Vec overhead = 24 bytes
+  Char storage = 3 × 4 = 12 bytes
+  Total = 36 bytes
+
+Total memory: 64 + 36 = 100 bytes ✓
+```
+
+### Calculation Challenge #6: Branch Factor
+
+```
+At each char_pos:
+  2 recursive calls (include, exclude)
+
+Branch factor = 2
+Depth = n + 1
+
+Total nodes in tree = 2^0 + 2^1 + 2^2 + ... + 2^n
+                    = 2^(n+1) - 1
+
+For n=3:
+  Depth 0: 1 node
+  Depth 1: 2 nodes  
+  Depth 2: 4 nodes
+  Depth 3: 8 nodes
+  Total: 1+2+4+8 = 15 = 2^4 - 1 ✓
+```
+
+### Calculation Challenge #7: Fractional Analysis
+
+```
+Probability of outputting at leaf node:
+
+Total leaf nodes = 2^n
+Valid outputs = 2^n - 1 (exclude empty)
+
+P(output) = (2^n - 1) / 2^n = 1 - 1/2^n
+
+For n=3:
+  P(output) = 7/8 = 0.875 = 87.5%
+
+For n=10:
+  P(output) = 1023/1024 ≈ 0.999 = 99.9%
+
+For n=1:
+  P(output) = 1/2 = 0.5 = 50%
+
+∴ As n↑, P(output)→1
+```
+
+## Predicted Failures Summary
+
+```
+1. char_pos == n → output WITHOUT checking tray.is_empty()
+   → Outputs empty string ✗
+
+2. Missing exclude branch → Only include path explored
+   → Outputs n combinations instead of 2^n - 1 ✗
+
+3. Missing tray.pop() between branches
+   → Tray state corrupted for exclude branch ✗
+
+4. helper(char_pos + 2) instead of helper(char_pos + 1)
+   → Skips characters ✗
+
+5. Output after recursive calls instead of in base case
+   → Duplicate/partial outputs ✗
+
+6. Using String instead of Vec<char>
+   → O(n * 2^n) instead of O(2^n) ✗
+
+7. Infinite recursion: helper(char_pos) calls helper(char_pos)
+   → Stack overflow ✗
+```

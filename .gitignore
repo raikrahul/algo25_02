@@ -5,6 +5,7 @@
 08_reverse_words
 merge_arrays_test
 reverse_words
+birep_test
 
 # Generic Rust binaries (compiled without extension)
 *.exe
